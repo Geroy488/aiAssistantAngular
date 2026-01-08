@@ -1,0 +1,20 @@
+﻿<div class="p-4">
+    <div class="container">
+        <h1>Hi {{account?.firstName}}!</h1>
+        <p>You're logged in with Angular 15 & JWT!!</p>
+        
+        <!-- Add Chatbot Section -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">AI Assistant</h4>
+                    </div>
+                    <div class="card-body p-0">
+                        <app-chatbot-inline></app-chatbot-inline>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
