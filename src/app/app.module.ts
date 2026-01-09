@@ -1,10 +1,12 @@
-﻿import { NgModule, APP_INITIALIZER } from '@angular/core';
+﻿﻿import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-import { CommonModule } from '@angular/common';
 
-// used to create fake backend
+
+
+
+//used to create fake backend
 import { fakeBackendProvider } from './_helpers';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -13,23 +15,21 @@ import { AccountService } from './_services';
 import { AppComponent } from './app.component';
 import { AlertComponent } from './_components';
 import { HomeComponent } from './home';
-import { ChatbotComponent } from './chatbot/chatbot.component';
-import { ChatbotInlineComponent } from './home/chatbot-inline.component';
+import { ChatComponent } from './chat/chat.component';
 
 @NgModule({
     imports: [
         BrowserModule,
-        CommonModule,
         ReactiveFormsModule,
         HttpClientModule,
-        AppRoutingModule
+        AppRoutingModule,
+        FormsModule
     ],
     declarations: [
         AppComponent,
         AlertComponent,
         HomeComponent,
-        ChatbotComponent,
-        ChatbotInlineComponent
+        ChatComponent
     ],
     providers: [
         { provide: APP_INITIALIZER, useFactory: appInitializer, multi: true, deps: [AccountService] },
@@ -37,7 +37,7 @@ import { ChatbotInlineComponent } from './home/chatbot-inline.component';
         { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
 
         // provider used to create fake backend
-        // fakeBackendProvider
+       //fakeBackendProvider
     ],
     bootstrap: [AppComponent]
 })

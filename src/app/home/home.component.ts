@@ -2,7 +2,7 @@
 
 import { AccountService } from '@app/_services';
 
-@Component({ templateUrl: 'home.component.html' })
+@Component({ templateUrl: 'home.component.html', styleUrls: ['./home.component.less'] })
 export class HomeComponent {
     account = this.accountService.accountValue;
 
