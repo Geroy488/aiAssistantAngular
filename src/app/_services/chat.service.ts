@@ -19,7 +19,7 @@ export class ChatService {
   sendMessage(history: any[]): Observable<any> {
     const payload = {
       contents: history,
-      tools: [{ google_search: {} }],
+    //   tools: [{ google_search: {} }],
       systemInstruction: {
         parts: [{ text: this.systemInstruction }]
       }
