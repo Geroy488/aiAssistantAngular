@@ -2,7 +2,8 @@
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { map, finalize } from 'rxjs/operators';
+import { map, finalize, catchError } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 
 import { environment } from '@environments/environment';
 import { Account } from '@app/_models';
@@ -43,12 +44,27 @@ export class AccountService {
     }
 
     refreshToken() {
+        // SAFETY CHECK: Don't even try if no account exists
+        if (!this.accountValue) {
+            console.log('No account to refresh, skipping');
+            return throwError(() => new Error('No account to refresh'));
+        }
+
         return this.http.post<any>(`${baseUrl}/refresh-token`, {}, { withCredentials: true })
-            .pipe(map((account) => {
-                this.accountSubject.next(account);
-                this.startRefreshTokenTimer();
-                return account;
-            }));
+            .pipe(
+                map((account) => {
+                    this.accountSubject.next(account);
+                    this.startRefreshTokenTimer();
+                    return account;
+                }),
+                catchError(error => {
+                    // If refresh fails, silently stop the timer and clear account
+                    console.log('Token refresh failed, clearing session');
+                    this.stopRefreshTokenTimer();
+                    this.accountSubject.next(null);
+                    return throwError(() => error);
+                })
+            );
     }
 
     register(account: Account) {
@@ -110,17 +126,44 @@ export class AccountService {
     private refreshTokenTimeout?: any;
 
     private startRefreshTokenTimer() {
-        // parse json object from base64 encoded jwt token
-        const jwtBase64 = this.accountValue!.jwtToken!.split('.')[1];
-        const jwtToken = JSON.parse(atob(jwtBase64));
+        // CRITICAL FIX: Check if account and token exist before trying to parse
+        if (!this.accountValue || !this.accountValue.jwtToken) {
+            console.log('No valid account or token to refresh');
+            return;
+        }
 
-        // set a timeout to refresh the token a minute before it expires
-        const expires = new Date(jwtToken.exp * 1000);
-        const timeout = expires.getTime() - Date.now() - (60 * 1000);
-        this.refreshTokenTimeout = setTimeout(() => this.refreshToken().subscribe(), timeout);
+        try {
+            // parse json object from base64 encoded jwt token
+            const jwtBase64 = this.accountValue.jwtToken.split('.')[1];
+            const jwtToken = JSON.parse(atob(jwtBase64));
+
+            // set a timeout to refresh the token a minute before it expires
+            const expires = new Date(jwtToken.exp * 1000);
+            const timeout = expires.getTime() - Date.now() - (60 * 1000);
+            
+            // Only set timeout if it's positive (token hasn't already expired)
+            if (timeout > 0) {
+                this.refreshTokenTimeout = setTimeout(() => {
+                    this.refreshToken().subscribe({
+                        error: (err) => {
+                            console.error('Auto refresh token failed:', err);
+                            // Don't logout automatically, let user continue
+                        }
+                    });
+                }, timeout);
+                console.log(`Token refresh scheduled in ${Math.round(timeout / 1000)} seconds`);
+            } else {
+                console.log('Token already expired, not scheduling refresh');
+            }
+        } catch (error) {
+            console.error('Error parsing JWT token:', error);
+        }
     }
 
     private stopRefreshTokenTimer() {
-        clearTimeout(this.refreshTokenTimeout);
+        if (this.refreshTokenTimeout) {
+            clearTimeout(this.refreshTokenTimeout);
+            this.refreshTokenTimeout = undefined;
+        }
     }
 }

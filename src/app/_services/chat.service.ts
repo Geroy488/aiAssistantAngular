@@ -1,33 +1,55 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
+export interface ChatResponse {
+  success: boolean;
+  response: string;
+  error?: string;
+  timestamp?: Date;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ChatService {
+  // Now points to YOUR backend, not directly to Google
+  private apiUrl = `${environment.apiUrl}/api/chatbot/message`;
 
-  private apiUrl =
-    'https://generativelanguage.googleapis.com/v1beta/models/' +
-    'gemini-2.5-flash-preview-09-2025:generateContent';
-
-  private systemInstruction =
-    'You are a helpful and knowledgeable instructor. ' +
-    'Provide clear, concise, and structured answers. Use markdown formatting extensively.';
+  private conversationHistory: any[] = [];
 
   constructor(private http: HttpClient) {}
 
-  sendMessage(history: any[]): Observable<any> {
-    const payload = {
-      contents: history,
-    //   tools: [{ google_search: {} }],
-      systemInstruction: {
-        parts: [{ text: this.systemInstruction }]
-      }
+  sendMessage(userMessage: string): Observable<ChatResponse> {
+    // Add user message to history
+    this.conversationHistory.push({
+      role: 'user',
+      parts: [{ text: userMessage }]
+    });
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    const body = {
+      message: userMessage,
+      conversationHistory: this.conversationHistory.slice(-10) // Last 10 messages
     };
 
-    return this.http.post(
-      `${this.apiUrl}?key=${environment.geminiApiKey}`,
-      payload
-    );
+    return this.http.post<ChatResponse>(this.apiUrl, body, { headers });
+  }
+
+  addAssistantMessage(message: string): void {
+    this.conversationHistory.push({
+      role: 'model',
+      parts: [{ text: message }]
+    });
+  }
+
+  getHistory(): any[] {
+    return [...this.conversationHistory];
+  }
+
+  clearHistory(): void {
+    this.conversationHistory = [];
   }
 }

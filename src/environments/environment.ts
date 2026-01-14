@@ -4,8 +4,7 @@
 
 export const environment = {
     production: false,
-    apiUrl: 'http://localhost:4000',
-    geminiApiKey: 'AIzaSyCjMFe-qyWg8HT30zctj8ePm391oebnEtU'
+    apiUrl: 'http://localhost:4000'
 };
 
 /*
