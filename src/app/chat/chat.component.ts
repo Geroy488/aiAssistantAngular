@@ -17,10 +17,8 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     constructor(private chatService: ChatService) {}
 
     ngOnInit(): void {
-        this.chatHistory.push({
-            role: 'model',
-            parts: [{ text: 'Hello! I am ready to assist you.' }]
-        });
+        // Don't add an initial model message
+        // Let user start the conversation
     }
 
     ngAfterViewChecked() {        
@@ -48,13 +46,13 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         this.isLoading = true;
         this.errorMessage = '';
 
-        // FIXED: Send only the user message as a string
+        // Send ONLY the message string, not the entire history
         this.chatService.sendMessage(userMessage).subscribe({
             next: (response) => {
                 this.isLoading = false;
 
-                // FIXED: Use the new response format from backend
                 if (response.success && response.response) {
+                    // Add AI response to chat history
                     this.chatHistory.push({
                         role: 'model',
                         parts: [{ text: response.response }]
@@ -81,20 +79,18 @@ export class ChatComponent implements OnInit, AfterViewChecked {
                     this.errorMessage = 'Failed to send message. Please try again.';
                 }
 
-                // Add error message to chat
+                // Show error in chat
                 this.chatHistory.push({
                     role: 'model',
-                    parts: [{ text: `Error: ${this.errorMessage}` }]
+                    parts: [{ text: `⚠️ ${this.errorMessage}` }]
                 });
             }
         });
     }
 
     clearChat(): void {
-        this.chatHistory = [{
-            role: 'model',
-            parts: [{ text: 'Hello! I am ready to assist you.' }]
-        }];
+        // Clear all messages
+        this.chatHistory = [];
         this.chatService.clearHistory();
         this.errorMessage = '';
     }
