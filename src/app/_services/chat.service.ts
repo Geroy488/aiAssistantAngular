@@ -13,7 +13,7 @@ export interface ChatResponse {
 @Injectable({ providedIn: 'root' })
 export class ChatService {
   // Now points to YOUR backend, not directly to Google
-  private apiUrl = `${environment.apiUrl}/api/chatbot/message`;
+  private apiUrl = `${environment.apiUrl}/chatbot/message`;
 
   private conversationHistory: any[] = [];
 
