@@ -1,0 +1,190 @@
+<div class="container-fluid pt-4 px-4">
+    <div *ngIf="showSuccess" class="d-flex justify-content-center mb-3">
+        <div class="alert alert-success py-1 px-3 small mb-0" role="alert">
+            ✅ Task created successfully!
+        </div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">📋 Task Manager</h4>
+        <button class="btn btn-primary btn-sm" (click)="showForm = !showForm">
+            + New Task
+        </button>
+    </div>
+
+    <!-- Add Task Form -->
+    <div *ngIf="showForm" class="card p-3 mb-4 shadow-sm">
+        <h6 class="mb-3">Create New Task</h6>
+        <div class="mb-2">
+            <input class="form-control"
+                [class.is-invalid]="showFormError && !newTask.title"
+                placeholder="Task title"
+                [(ngModel)]="newTask.title" />
+            <div class="invalid-feedback">Title is required</div>
+        </div>
+        <div class="mb-2">
+            <textarea class="form-control" rows="3"
+                [class.is-invalid]="showFormError && !newTask.description"
+                placeholder="Describe your task... (AI will auto-set priority and deadline)"
+                [(ngModel)]="newTask.description">
+            </textarea>
+            <div class="invalid-feedback">Description is required</div>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success btn-sm" (click)="createTask()">✓ Create</button>
+            <button class="btn btn-secondary btn-sm" (click)="showForm = false; showFormError = false">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-center py-4">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Loading tasks...</p>
+    </div>
+
+    <!-- 3 Column Layout -->
+    <div *ngIf="!loading" class="row g-3">
+
+        <!-- HIGH PRIORITY -->
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <strong>🔴 High Priority</strong>
+                    <span class="badge bg-white text-danger">{{ highTasks.length }}</span>
+                </div>
+                <div class="card-body p-2">
+                    <div *ngIf="highTasks.length === 0" class="text-center text-muted py-3">No high priority tasks</div>
+                    <div *ngFor="let task of highTasks" class="task-card border rounded p-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong class="d-block">{{ task.title }}</strong>
+                                <small class="text-muted">{{ task.description }}</small>
+                                <div class="mt-1">
+                                    <span class="badge"
+                                        [class.bg-success]="task.status === 'Completed'"
+                                        [class.bg-warning]="task.status === 'Pending'"
+                                        [class.text-dark]="task.status === 'Pending'">
+                                        {{ task.status }}
+                                    </span>
+                                </div>
+                                <small class="text-muted d-block mt-1">📅 {{ task.deadline | date:'mediumDate' }}</small>
+                                <small class="text-muted">🕐 {{ task.created_at | date:'short' }}</small>
+                            </div>
+                            <div class="d-flex flex-column gap-1 ms-2">
+                                <button class="btn btn-xs btn-outline-success"
+                                    *ngIf="task.status !== 'Completed'"
+                                    (click)="updateStatus(task, 'Completed')">✓</button>
+                                <button class="btn btn-xs btn-outline-warning"
+                                    *ngIf="task.status === 'Completed'"
+                                    (click)="updateStatus(task, 'Pending')">↩</button>
+                                <button class="btn btn-xs btn-outline-danger"
+                                    (click)="taskToDelete = task.id; showDeleteModal = true">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MEDIUM PRIORITY -->
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <strong>🟡 Medium Priority</strong>
+                    <span class="badge bg-white text-dark">{{ mediumTasks.length }}</span>
+                </div>
+                <div class="card-body p-2">
+                    <div *ngIf="mediumTasks.length === 0" class="text-center text-muted py-3">No medium priority tasks</div>
+                    <div *ngFor="let task of mediumTasks" class="task-card border rounded p-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong class="d-block">{{ task.title }}</strong>
+                                <small class="text-muted">{{ task.description }}</small>
+                                <div class="mt-1">
+                                    <span class="badge"
+                                        [class.bg-success]="task.status === 'Completed'"
+                                        [class.bg-warning]="task.status === 'Pending'"
+                                        [class.text-dark]="task.status === 'Pending'">
+                                        {{ task.status }}
+                                    </span>
+                                </div>
+                                <small class="text-muted d-block mt-1">📅 {{ task.deadline | date:'mediumDate' }}</small>
+                                <small class="text-muted">🕐 {{ task.created_at | date:'short' }}</small>
+                            </div>
+                            <div class="d-flex flex-column gap-1 ms-2">
+                                <button class="btn btn-xs btn-outline-success"
+                                    *ngIf="task.status !== 'Completed'"
+                                    (click)="updateStatus(task, 'Completed')">✓</button>
+                                <button class="btn btn-xs btn-outline-warning"
+                                    *ngIf="task.status === 'Completed'"
+                                    (click)="updateStatus(task, 'Pending')">↩</button>
+                                <button class="btn btn-xs btn-outline-danger"
+                                    (click)="taskToDelete = task.id; showDeleteModal = true">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOW PRIORITY -->
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <strong>🟢 Low Priority</strong>
+                    <span class="badge bg-white text-success">{{ lowTasks.length }}</span>
+                </div>
+                <div class="card-body p-2">
+                    <div *ngIf="lowTasks.length === 0" class="text-center text-muted py-3">No low priority tasks</div>
+                    <div *ngFor="let task of lowTasks" class="task-card border rounded p-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong class="d-block">{{ task.title }}</strong>
+                                <small class="text-muted">{{ task.description }}</small>
+                                <div class="mt-1">
+                                    <span class="badge"
+                                        [class.bg-success]="task.status === 'Completed'"
+                                        [class.bg-warning]="task.status === 'Pending'"
+                                        [class.text-dark]="task.status === 'Pending'">
+                                        {{ task.status }}
+                                    </span>
+                                </div>
+                                <small class="text-muted d-block mt-1">📅 {{ task.deadline | date:'mediumDate' }}</small>
+                                <small class="text-muted">🕐 {{ task.created_at | date:'short' }}</small>
+                            </div>
+                            <div class="d-flex flex-column gap-1 ms-2">
+                                <button class="btn btn-xs btn-outline-success"
+                                    *ngIf="task.status !== 'Completed'"
+                                    (click)="updateStatus(task, 'Completed')">✓</button>
+                                <button class="btn btn-xs btn-outline-warning"
+                                    *ngIf="task.status === 'Completed'"
+                                    (click)="updateStatus(task, 'Pending')">↩</button>
+                                <button class="btn btn-xs btn-outline-danger"
+                                    (click)="taskToDelete = task.id; showDeleteModal = true">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      <!-- Delete Confirmation Modal -->
+        <div class="modal-backdrop fade show" *ngIf="showDeleteModal" style="opacity: 0.5;"></div>
+        <div class="modal fade show d-block" *ngIf="showDeleteModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">⚠️ Delete Task</h5>
+                        <button type="button" class="btn-close btn-close-white" (click)="showDeleteModal = false"></button>
+                    </div>
+                    <div class="modal-body py-2">
+                        <p class="mb-1">Are you sure you want to delete this task?</p>
+                        <p class="text-muted small mb-0">This action <strong>cannot be undone</strong>.</p>
+                    </div>
+                    <div class="modal-footer py-2">
+                        <button class="btn btn-secondary" (click)="showDeleteModal = false">Cancel</button>
+                        <button class="btn btn-danger" (click)="confirmDelete()">Yes, Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
